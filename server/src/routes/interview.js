@@ -1,0 +1,14 @@
+import { Router } from "express";
+import { z } from "zod";
+import { createSession, getSession, addResult, complete } from "../store.js";
+import { generateQuestion, evaluate, report, streamText, isMock } from "../services/ai.js";
+import { questionPrompt } from "../prompts/interview.js";
+const router = Router();
+const configSchema = z.object({ interviewType: z.enum(["Technical", "HR", "Mixed"]), subject: z.string().min(2).max(80), difficulty: z.enum(["Easy", "Medium", "Hard"]), questionCount: z.union([z.literal(5),z.literal(10),z.literal(15)]), role: z.string().max(80).optional().default(""), instructions: z.string().max(500).optional().default("") });
+router.post("/start", async (req, res, next) => { try { const config = configSchema.parse(req.body); const session = createSession(config); res.status(201).json({ id: session.id, config, questionNumber: 1 }); } catch (e) { next(e); } });
+router.post("/question/stream", async (req, res, next) => { try { const { sessionId } = z.object({sessionId:z.string().uuid()}).parse(req.body); const s = getSession(sessionId); if (!s) return res.status(404).json({error:"Interview session was not found."}); const previous=s.results.map(x=>x.question); return streamText(res, questionPrompt(s.config, previous), isMock() ? await generateQuestion(s.config, previous) : ""); } catch(e) { next(e); } });
+router.post("/question", async (req, res, next) => { try { const { sessionId } = z.object({sessionId:z.string().uuid()}).parse(req.body); const s = getSession(sessionId); if (!s) return res.status(404).json({error:"Interview session was not found."}); const question = await generateQuestion(s.config, s.results.map(x => x.question)); res.json({ question, questionNumber: s.results.length + 1 }); } catch(e) { next(e); } });
+router.post("/evaluate", async (req, res, next) => { try { const body = z.object({ sessionId:z.string().uuid(), question:z.string().min(2).max(2000), answer:z.string().max(10000).default("") }).parse(req.body); const s=getSession(body.sessionId); if(!s) return res.status(404).json({error:"Interview session was not found."}); const evaluation=await evaluate({config:s.config,question:body.question,answer:body.answer}); addResult(s.id,{...body,evaluation}); res.json({ evaluation, completed: s.results.length >= s.config.questionCount, resultCount:s.results.length }); } catch(e){next(e);} });
+router.get("/:id", (req,res)=>{ const s=getSession(req.params.id); if(!s)return res.status(404).json({error:"Interview session was not found."}); res.json(s); });
+router.post("/complete", async(req,res,next)=>{ try {const {sessionId}=z.object({sessionId:z.string().uuid()}).parse(req.body);const s=getSession(sessionId);if(!s)return res.status(404).json({error:"Interview session was not found."});const finalReport=await report(s.config,s.results);res.json(complete(sessionId,finalReport));}catch(e){next(e);}});
+export default router;

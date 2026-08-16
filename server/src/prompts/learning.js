@@ -1,0 +1,1 @@
+export const learningPrompt = ({ topic, level }) => `You are an excellent technical tutor. Explain "${topic}" for a ${level} learner. Use clear headings: Simple explanation, Detailed explanation, Example, Common interview mistakes, Related interview question. Be accurate, concise, and encouraging.`;

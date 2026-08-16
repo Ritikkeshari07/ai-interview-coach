@@ -1,0 +1,7 @@
+{
+  "name": "ai-interview-coach",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": { "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"", "start": "npm --prefix server start", "build": "npm --prefix client run build", "test": "npm --prefix server test" },
+  "devDependencies": { "concurrently": "^9.1.2" }
+}

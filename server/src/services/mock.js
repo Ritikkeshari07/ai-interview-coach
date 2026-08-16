@@ -1,0 +1,13 @@
+const bank = {
+  "Data Structures & Algorithms": ["Explain the difference between an array and a linked list. When would you choose each?", "How does a hash table handle collisions?"],
+  Java: ["Explain the difference between an interface and an abstract class in Java."],
+  Python: ["What is the difference between a list, tuple, and set in Python?"],
+  DBMS: ["Explain normalization and why it matters in relational database design."],
+  "Operating Systems": ["What is a process versus a thread, and what are the trade-offs?"],
+  "Computer Networks": ["Describe what happens when you enter a URL in a browser."],
+  OOP: ["Explain encapsulation, inheritance, polymorphism, and abstraction with an example."]
+};
+export function mockQuestion(config, index) { return (bank[config.subject] || [config.interviewType === "HR" ? "Tell me about yourself and why you are interested in this role." : `Explain an important ${config.subject} concept you have used.`])[index % (bank[config.subject]?.length || 1)]; }
+export function skippedEvaluation() { return { score: 0, verdict: "Skipped - no answer submitted", strengths: [], weaknesses: ["No answer was provided for this question."], missingPoints: ["A response to the question."], suggestions: ["Attempt every question, even a partial answer, to build the habit and get useful feedback."], idealAnswer: "", followUp: "" }; }
+export function mockEvaluation(answer) { if (!answer || !answer.trim()) return skippedEvaluation(); const score = answer.length < 20 ? 4 : answer.length < 90 ? 6 : 8; return { score, verdict: score >= 7 ? "Good foundation" : "Needs more detail", strengths: answer.length > 20 ? ["You addressed the question directly."] : ["You made an attempt to answer."], weaknesses: ["The explanation could be more specific."], missingPoints: ["Include a concrete example or trade-off."], suggestions: ["Use a structured answer: definition, example, and practical impact."], idealAnswer: "A strong answer defines the concept clearly, compares alternatives, and gives a relevant example.", followUp: "Can you give a real-world example?" }; }
+export function mockReport(results) { const avg = results.reduce((a, x) => a + x.evaluation.score, 0) / (results.length || 1); return { overallFeedback: `Your average score was ${avg.toFixed(1)}/10. Keep practising with concise, example-led answers.`, strongestAreas: ["Answer relevance"], weakestAreas: ["Technical depth"], technicalAssessment: "Build more depth through examples and trade-offs.", communicationAssessment: "Use a clear opening, supporting details, and conclusion.", recommendations: ["Practise one subject daily.", "Review feedback before retrying."] }; }
